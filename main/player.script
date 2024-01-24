@@ -1,0 +1,75 @@
+function init(self)
+	msg.post("interface", "register")
+	msg.post("interface", "register_analog", { id = "analog", radius = 80 })
+	msg.post("interface", "register_button", { id = "interact" })
+	msg.post("interface", "register_button", { id = "menu" })
+	msg.post("interface", "register_button", { id = "audio" })
+	msg.post("interface", "register_button", { id = "quest_log" })
+	msg.post("interface", "register_button", { id = "inventory" })
+
+	self.speed = vmath.vector3()
+	self.analog_pressed = false
+end
+
+function final(self)
+	msg.post("interface", "unregister")
+end
+
+function update(self, dt)
+	go.set_position(go.get_position() + self.speed * dt)
+
+	if self.speed.x ~= 0 or self.speed.y ~= 0 then
+		sprite.play_flipbook("#sprite", "walk")
+		sprite.set_hflip("#sprite", self.speed.x < 0)
+	else
+		sprite.play_flipbook("#sprite", "idle")
+	end
+
+end
+
+function handle_button_click(message)
+	if message.id == hash("interact") then
+		print("interaction detected!")
+	elseif message.id == hash("menu") then
+		print("menu detected!")
+	elseif message.id == hash("audio") then
+		print("audio detected!")
+	elseif message.id == hash("quest_log") then
+		print("quest log detected!")
+	elseif message.id == hash("inventory") then
+		print("inventory detected!")
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("contact_point_response") then
+		if message.group == hash("obstacle") then
+			local normal = message.normal
+			local distance = message.distance
+			local correction = vmath.vector3()
+			if distance > 0 then
+				local proj = vmath.project(correction, normal * distance)
+				if proj < 1 then
+					local comp = (distance - distance * proj) * normal
+					go.set_position(go.get_position() + comp)
+					correction = correction + comp
+				end
+			end	
+		end
+	end
+
+	if message_id == hash("onscreen_button") and message.released then
+		handle_button_click(message)
+	elseif message_id == hash("onscreen_analog") then
+		if message.pressed and not self.analog_pressed then
+			self.analog_pressed = true
+		elseif message.released then
+			self.analog_pressed = false
+			self.speed.x = 0
+			self.speed.y = 0
+		elseif self.analog_pressed then
+			self.speed.x = message.x * 250
+			self.speed.y = message.y * 250
+		end
+	end
+end
