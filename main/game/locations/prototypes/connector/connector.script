@@ -1,0 +1,19 @@
+local AREA_CONTROLLER = require("main.module.area_controller")
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("contact_point_response") then
+		if message.group == hash("player") then
+			local connector_id = string.match(tostring(sender), "/instance(%d+)")
+			if connector_id then
+				connector_instance = "/instance" .. connector_id
+				adjacent_area = AREA_CONTROLLER.connectors[hash(connector_instance)]
+				AREA_CONTROLLER.setCurrentRoom(adjacent_area)
+				msg.post("loader:/game_loader#loader", "load_new_room")
+				--print(adjacent_area)
+				--print(sender, connector_id)
+			else
+				print("Connector ID not found in the URL")
+			end
+		end
+	end
+end

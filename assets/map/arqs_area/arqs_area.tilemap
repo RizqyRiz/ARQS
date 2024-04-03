@@ -1,0 +1,50 @@
+tile_set: "/assets/map/arqs_area/items.tilesource"
+layers {
+  id: "ground"
+  z: 0.0
+  is_visible: 1
+  cell {
+    x: -65
+    y: -55
+    tile: 152
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+  cell {
+    x: 0
+    y: 0
+    tile: 150
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+  cell {
+    x: 98
+    y: 99
+    tile: 150
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+  cell {
+    x: 99
+    y: 99
+    tile: 150
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+}
+layers {
+  id: "obstacle"
+  z: 0.5
+  is_visible: 1
+}
+layers {
+  id: "elevated"
+  z: 1.0
+  is_visible: 1
+}
+material: "/builtins/materials/tile_map.material"
+blend_mode: BLEND_MODE_ALPHA

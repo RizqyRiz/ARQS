@@ -1,0 +1,286 @@
+local OS = require("os")
+local GAME_CONTROLLER = require("main.module.game_controller")
+local AREA_CONTROLLER = require("main.module.area_controller")
+local ADDR = GAME_CONTROLLER.address
+-- local camera = require "orthographic.camera"
+-- local CAMERA_ID = hash("/camera")
+
+local world_border_offset = 1
+local max_row_wall_offset = 0
+local area_type = ""
+local go_pos = {}
+
+local object_Sprites = require("main.module.objectSpriteByIds")
+
+local function register_go(position, id)
+	go_pos[position.x .. "," .. position.y] = id
+end
+
+local function get_go_by_position(position)
+	return go_pos[position.x .. "," .. position.y]
+end
+
+local function delete_go(position)
+	local id = get_go_by_position(position)
+	if id then
+		go.delete(id)
+		go_pos[position.x .. "," .. position.y] = nil
+	end
+end
+
+local function generate_quest_go()
+	for i, v in pairs(GAME_CONTROLLER.questObjects) do
+		if v.area == AREA_CONTROLLER.currentRoom then
+			--print("There is a quest object ", i, " in this area ", v.area)
+			local inside_object_offset = 0
+			local object_z = 0.8
+			if v.inside_object == "true" then
+				inside_object_offset = 2
+				object_z = 0.7
+				--print("Its inside!")
+			end
+			local x = v.x + world_border_offset
+			local y = max_row_wall_offset - v.y + world_border_offset - 1 + inside_object_offset
+			local y_offset = tonumber(v.foreaft) * 10
+			
+			-- print(i, x, y, y_offset)
+			
+			if string.sub(i, 1, 3) == "NPC" then
+				local NPC_data = GAME_CONTROLLER.npcData[i]
+				
+				factory.unload("#questGo_factory")
+				factory.set_prototype("#questGo_factory", NPC_data.prototype)
+				local id = factory.create("#questGo_factory")
+				print(id .. " generated")
+				GAME_CONTROLLER.addNPCGO(id, i)
+				local sprite_url = msg.url(nil, id, "sprite")
+				local pos = vmath.vector3(x * 80, y * 80 + y_offset, 0.8)
+				--local pos = vmath.vector3(x * 80, y * 80, 0.8)
+				go.set_position(pos, sprite_url)
+			end
+			if string.sub(i, 1, 3) == "IID" then
+				local item_data = GAME_CONTROLLER.itemData[i]
+				--local inside = item_data.inside_object
+				
+				factory.unload("#questGo_factory")
+				factory.set_prototype("#questGo_factory", item_data.prototype)
+				local id = factory.create("#questGo_factory")
+				local sprite_url = msg.url(nil, id, "sprite")
+				local pos = vmath.vector3(x * 80, y * 80 + y_offset, object_z)
+				--local pos = vmath.vector3(x * 80, y * 80, 0.7)
+				go.set_position(pos, sprite_url)
+				-- msg.post(sprite_url, "play_animation", {id = hash(sprite)})
+			end
+		end
+	end
+end
+
+function init(self)
+	self.bounds = true
+
+	http.request(ADDR .. "api/arqs/locations/area/" .. AREA_CONTROLLER.currentRoom, "GET", function(self, id, response)
+		if response.status == 200 or response.status == 304 then
+			local json_data = response.response
+			local data_table = json.decode(json_data)
+
+			for i, v in ipairs(data_table) do
+				-- convert fetched tile data into a valid Lua expression
+				local tile_data_string = string.gsub(v.Tile_Data, "%[", "{"):gsub("%]", "}")
+				-- convert string to a Lua table
+				local tile_data_table = load("return " .. tile_data_string)()
+
+				-- draw floor and walls
+				local row_count = #tile_data_table
+				local col_count = 0
+				local max_col = #tile_data_table[1]
+				max_row_wall_offset = #tile_data_table - 2
+
+				-- Handle indoor walls
+				local wall = "Void"
+				if v.Type == "Indoor" then
+					area_type = "Indoor"
+					wall = "wall_top"
+				end
+				local wall_x = col_count
+				local wall_y = row_count
+				local wall_pos = vmath.vector3(wall_x * 80, wall_y * 80, 0.5)
+				local prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"
+				factory.unload("#obstacle_factory")
+				factory.set_prototype("#obstacle_factory", prototype)
+				for i=0, row_count+1 do
+					-- west wall
+					local id = factory.create("#obstacle_factory", pos)
+					local sprite_url = msg.url(nil, id, "sprite")
+					go.set_position(vmath.vector3(wall_pos.x, i * 80, 0.5), sprite_url)
+					msg.post(sprite_url, "play_animation", {id = hash(wall)})
+					register_go(vmath.vector3(wall_pos.x, i * 80, 0.5), id)
+					-- east wall
+					local id = factory.create("#obstacle_factory", pos)
+					local sprite_url = msg.url(nil, id, "sprite")
+					go.set_position(vmath.vector3((max_col+1) * 80, i * 80, 0.5), sprite_url)
+					msg.post(sprite_url, "play_animation", {id = hash(wall)})
+					register_go(vmath.vector3((max_col+1) * 80, i * 80, 0.5), id)
+				end
+				for i=1, max_col+1 do
+					-- north wall
+					local id = factory.create("#obstacle_factory", pos)
+					local sprite_url = msg.url(nil, id, "sprite")
+					go.set_position(vmath.vector3(i * 80, (row_count+1) * 80, 0.5), sprite_url)
+					msg.post(sprite_url, "play_animation", {id = hash(wall)})
+					register_go(vmath.vector3(i * 80, (row_count+1) * 80, 0.5), id)
+					-- south wall
+					local id = factory.create("#obstacle_factory", pos)
+					local sprite_url = msg.url(nil, id, "sprite")
+					go.set_position(vmath.vector3(i * 80, wall_pos.x, 0.5), sprite_url)
+					msg.post(sprite_url, "play_animation", {id = hash(wall)})
+					register_go(vmath.vector3(i * 80, wall_pos.x, 0.5), id)
+				end
+
+				-- Handle general area
+				for i, row in ipairs(tile_data_table) do
+					for j, col in ipairs(row) do
+						-- finding coordinates of each tile
+						col_count = col_count + 1
+						if col_count > max_col then
+							row_count = row_count - 1
+							col_count = 1
+						end
+						
+						local x = col_count + world_border_offset
+						local y = row_count + world_border_offset
+						local pos = vmath.vector3((x - 1) * 80, (y - 1) * 80, 0.5)
+						-- print("Row: ", row_count, ", Col:", col_count, ", Tile Data: ", col)
+
+						-- handle walls and floor
+						if row_count > max_row_wall_offset then
+							-- draw front-facing walls
+							local id = factory.create("#obstacle_factory", pos)
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3(pos.x, pos.y, 0.5)
+							register_go(pos, id)
+							--print(pos)
+							go.set_position(pos, sprite_url)
+							msg.post(sprite_url, "play_animation", {id = hash("wall_front")})
+						else
+							-- draw floor
+							if v.Type == "Indoor" then
+								tilemap.set_tile("/tilemap#arqs_area", "ground", x, y, 148)
+							else
+								tilemap.set_tile("/tilemap#arqs_area", "ground", x, y, 147)
+							end
+						end
+					end
+				end
+
+				-- handle connectors (doors or stairs)
+				local connectors = json.decode(v.Connectors)
+				for _, connector in pairs(connectors) do
+					-- set connector direction, default set to south
+					local direction = "south"
+					if connector.x == 0 then				-- connector is on the west wall
+						direction = "west"
+					elseif connector.y == 0	then			-- connector is on the north wall
+						direction = "north"
+					elseif connector.x == (max_col-1) then	-- connector is on the east wall
+						direction = "east"
+					end
+
+					local x = connector.x
+					local y = max_row_wall_offset - connector.y
+
+					if connector.stair then
+						if tonumber(connector.target_level) > v.Level then
+							--pprint("This stairs is going up!")
+							factory.unload("#connector_factory")
+							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/stairs_up_prototype.goc")
+							local id = factory.create("#connector_factory")
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3((x + world_border_offset) * 80, (y + world_border_offset) * 80, 0.8)
+							delete_go(pos)
+							go.set_position(pos, sprite_url)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+						else
+							--pprint("This stairs is going down!")
+							factory.unload("#connector_factory")
+							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/stairs_down_prototype.goc")
+							local id = factory.create("#connector_factory")
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3((x + world_border_offset) * 80, (y + world_border_offset) * 80, 0.8)
+							delete_go(pos)
+							go.set_position(pos, sprite_url)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+						end
+					else
+						if direction == "east" or direction == "west" then
+							local x_offset = 0
+							if direction == "east" then
+								x_offset = 2
+							end
+							factory.unload("#connector_factory")
+							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/east_west_door_prototype.goc")
+							local id = factory.create("#connector_factory")
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3((x + x_offset) * 80, y * 80, 0.5)
+							delete_go(pos)
+							go.set_position(pos, sprite_url)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+						elseif direction == "north" then
+							factory.unload("#connector_factory")
+							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/north_door_prototype.goc")
+							local id = factory.create("#connector_factory")
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3((x + world_border_offset) * 80, (y + world_border_offset) * 80, 0.5)
+							local door_pos = vmath.vector3(pos.x, pos.y, 0.8)
+							delete_go(pos)
+							go.set_position(door_pos, sprite_url)
+							msg.post(sprite_url, "play_animation", {id = hash("Connector-Door-1")})
+							tilemap.set_tile("/tilemap#arqs_area", "ground", x + 1 + world_border_offset, y + 1 + world_border_offset, 150)		-- wall around door since door width != 80px
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+						else
+							factory.unload("#connector_factory")
+							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/north_south_door_prototype.goc")
+							local id = factory.create("#connector_factory")
+							local sprite_url = msg.url(nil, id, "sprite")
+							local pos = vmath.vector3((x + world_border_offset) * 80, 0, 0.5)
+							delete_go(pos)
+							go.set_position(pos, sprite_url)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+						end
+					end
+				end
+
+				-- handle objects in the area
+				local objects = json.decode(v.Objects)
+				for _, object in pairs(objects) do
+					local object_Data = object_Sprites.objects[tonumber(object.id)] or {name = "Miscellaneous-Bin-2", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"}
+					local sprite_name = object_Data.name
+					local prototype = object_Data.prototype
+
+					local x = object.x + world_border_offset
+					local y = max_row_wall_offset - object.y + world_border_offset + 1
+					local y_offset = tonumber(object.foreaft) * 10
+
+					factory.unload("#obstacle_factory")
+					factory.set_prototype("#obstacle_factory", prototype)
+					local id = factory.create("#obstacle_factory")
+					local sprite_url = msg.url(nil, id, "sprite")
+					local pos = vmath.vector3(x * 80, y * 80 + y_offset, 0.8)
+					go.set_position(pos, sprite_url)
+					msg.post(sprite_url, "play_animation", {id = hash(sprite_name)})
+
+					--print(sprite_name, x, y)
+				end
+
+			end
+
+			if next(GAME_CONTROLLER.questObjects) == nil and next(GAME_CONTROLLER.npcData) == nil and next(GAME_CONTROLLER.itemData) == nil then
+				timer.delay(1, false, generate_quest_go)
+			else
+				generate_quest_go()
+			end
+			
+		else
+			print("Error: " .. response.status)
+		end
+	end)
+end

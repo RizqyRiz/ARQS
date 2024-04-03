@@ -1,0 +1,29 @@
+tile_set: "/assets/map/arqs_map/arqs_tilesource.tilesource"
+layers {
+  id: "ground"
+  z: 0.0
+  is_visible: 1
+}
+layers {
+  id: "elevated"
+  z: 1.0
+  is_visible: 1
+  cell {
+    x: 0
+    y: 0
+    tile: 79
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+  cell {
+    x: 15
+    y: 9
+    tile: 79
+    h_flip: 0
+    v_flip: 0
+    rotate90: 0
+  }
+}
+material: "/builtins/materials/tile_map.material"
+blend_mode: BLEND_MODE_ALPHA

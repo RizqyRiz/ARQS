@@ -1,7 +1,7 @@
 script: "/in/onscreen.gui_script"
 textures {
   name: "gui"
-  texture: "/assets/gui.atlas"
+  texture: "/assets/gui/gui.atlas"
 }
 background_color {
   x: 0.0
@@ -11,8 +11,8 @@ background_color {
 }
 nodes {
   position {
-    x: 48.0
-    y: 723.0
+    x: 40.0
+    y: 760.0
     z: 0.0
     w: 1.0
   }
@@ -69,8 +69,8 @@ nodes {
 }
 nodes {
   position {
-    x: 177.0
-    y: 179.0
+    x: 180.39282
+    y: 180.0
     z: 0.0
     w: 1.0
   }
@@ -127,7 +127,7 @@ nodes {
 }
 nodes {
   position {
-    x: 878.0
+    x: 1100.0
     y: 180.0
     z: 0.0
     w: 1.0
@@ -185,8 +185,8 @@ nodes {
 }
 nodes {
   position {
-    x: 178.0
-    y: 178.0
+    x: 180.0
+    y: 180.0
     z: 0.0
     w: 1.0
   }
@@ -243,8 +243,8 @@ nodes {
 }
 nodes {
   position {
-    x: 124.0
-    y: 723.0
+    x: 120.0
+    y: 760.0
     z: 0.0
     w: 1.0
   }
@@ -302,7 +302,7 @@ nodes {
 nodes {
   position {
     x: 200.0
-    y: 723.0
+    y: 760.0
     z: 0.0
     w: 1.0
   }
@@ -359,8 +359,8 @@ nodes {
 }
 nodes {
   position {
-    x: 273.0
-    y: 723.0
+    x: 280.0
+    y: 760.0
     z: 0.0
     w: 1.0
   }
