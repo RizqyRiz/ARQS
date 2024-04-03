@@ -1,0 +1,38 @@
+image: "/assets/gui/images/arqs_ui.png"
+tile_width: 80
+tile_height: 80
+tile_margin: 0
+tile_spacing: 0
+collision: ""
+material_tag: "tile"
+collision_groups: "default"
+animations {
+  id: "empty"
+  start_tile: 81
+  end_tile: 81
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "location_indicator"
+  start_tile: 17
+  end_tile: 18
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 2
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "talk"
+  start_tile: 19
+  end_tile: 21
+  playback: PLAYBACK_LOOP_BACKWARD
+  fps: 3
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+extrude_borders: 2
+inner_padding: 0
+sprite_trim_mode: SPRITE_TRIM_MODE_OFF

@@ -1,0 +1,44 @@
+local GAME_CONTROLLER = require("main.module.game_controller")
+
+function quest_initializer(self)
+	id = go.get_id()
+	npc_id = GAME_CONTROLLER.npcGO[hash(id)]
+	--print("Game object " .. id .. " has the NPCID of " .. npc_id)
+	--pprint(GAME_CONTROLLER.questData[npc_id])
+	if GAME_CONTROLLER.questData[npc_id] ~= nil then
+		self.quest_initiator = true
+	end
+end
+
+function init(self)
+	self.quest_initiator = false
+	self.can_interact = false
+	
+	timer.delay(0.5, false, quest_initializer, self)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("contact_point_response") then
+		if message.group == hash("player") then
+			--pprint("Hello there from npc script")
+			--print(self.quest_initiator)
+		end
+	end
+	
+	if message_id == hash("trigger_response") then
+		if message.enter then
+			msg.post("#interaction", "play_animation", {id = hash("talk")})
+			msg.post("location:/player#player", "can_interact_with_npc")
+			self.can_interact = true
+		else
+			-- take action for exit
+			msg.post("#interaction", "play_animation", {id = hash("empty")})
+			msg.post("location:/player#player", "cannot_interact_with_npc")
+			self.can_interact = false
+		end
+	end
+
+	if message_id == hash("interact_with_player") then
+		print("Interaction notice from npc script!")
+	end
+end

@@ -1,0 +1,23 @@
+function init(self)
+	self.can_interact = false
+
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("trigger_response") then
+		if message.enter then
+			msg.post("#indicator", "play_animation", {id = hash("location_indicator")})
+			msg.post("location:/player#player", "can_interact_with_item")
+			self.can_interact = true
+		else
+			-- take action for exit
+			msg.post("#indicator", "play_animation", {id = hash("empty")})
+			msg.post("location:/player#player", "cannot_interact_with_item")
+			self.can_interact = false
+		end
+	end
+
+	if message_id == hash("interact_with_player") then
+		print("Interaction notice from item script!")
+	end
+end
