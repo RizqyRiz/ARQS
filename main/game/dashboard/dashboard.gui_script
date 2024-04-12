@@ -19,7 +19,7 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
-	set_text("user_name", FULLNAME)
+	set_text("user_name", FULLNAME .. ".")
 
 	self.card_node = gui.get_node("card/card")
 	self.gid = ""

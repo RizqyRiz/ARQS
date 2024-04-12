@@ -7,7 +7,7 @@ end
 
 function update(self, dt)
 	local pos = go.get_position()
-	label.set_text("#cursorLabel", "---- x: " .. pos.x .. "  y: " .. pos.y)
+	--label.set_text("#cursorLabel", "---- x: " .. pos.x .. "  y: " .. pos.y)
 	self.collision_id = nil
 end
 

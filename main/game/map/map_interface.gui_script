@@ -1,0 +1,49 @@
+
+local button = require "in.button"
+
+local GAME_CONTROLLER = require("main.module.game_controller")
+
+function set_map_name()
+	local node = gui.get_node("map_name")
+	if node then
+		-- Set the text value
+		gui.set_text(node, GAME_CONTROLLER.currentMapName)
+	end
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	self.buttons = {}
+	self.music = true
+
+	-- register gui buttons
+	button.register(gui.get_node("quest_btn"), function()
+		print("quest button clicked")
+	end)
+	button.register(gui.get_node("inventory_btn"), function()
+		print("inventory button clicked")
+	end)
+	button.register(gui.get_node("stats_btn"), function()
+		print("stats button clicked")
+	end)
+	button.register(gui.get_node("toggle_music_btn"), function()
+		print("toggle music button clicked")
+	end)
+	button.register(gui.get_node("exit_to_dashboard_btn"), function()
+		timer.delay(0.2, false, function()
+			msg.post("loader:/game_loader#loader", "return_to_dashboard_from_map")
+		end)
+	end)
+
+	-- set map name in header
+	if GAME_CONTROLLER.currentMapName == "" then
+		timer.delay(0.25, false, set_map_name)
+	else
+		set_map_name()
+	end
+end
+
+function on_input(self, action_id, action)
+	button.on_input(action_id, action)
+end

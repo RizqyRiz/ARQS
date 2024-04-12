@@ -39,7 +39,7 @@ function on_input(self, action_id, action)
 				GAME_CONTROLLER.setUser(user_data.UserID, user_data.Username, user_data.FirstName, user_data.SecondName)
 				
 				-- print("Login successful")
-				gui.set_color(feedback, vmath.vector4(0, 1, 0, 1))
+				gui.set_color(feedback, vmath.vector4(0, 0.7058823529411765, 0, 1))
 				gui.set_text(feedback, "Login Successful")
 
 				http.request(ADDR .. "api/arqs/games", "GET", function(self, id, response)

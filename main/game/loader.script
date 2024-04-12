@@ -4,7 +4,7 @@ local AREA_CONTROLLER = require("main.module.area_controller")
 function init(self)
 	msg.post(".", "acquire_input_focus")
 	self.map_loaded = false
-	self.level_loaded = false
+	self.area_loaded = false
 	
 	msg.post("#login_proxy", "load")
 end
@@ -40,7 +40,7 @@ function on_message(self, message_id, message, sender)
 
 	-- on proxy unloaded
 	if message_id == hash("proxy_unloaded") then
-		if sender == msg.url("loader:/game_loader#area_proxy") then
+		if sender == msg.url("loader:/game_loader#area_proxy") and self.area_loaded == false and self.map_loaded == false then
 			msg.post("#area_proxy", "load")
 		end
 	end
@@ -53,14 +53,28 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("load_game_from_dashboard") then
 		msg.post("#dashboard_proxy", "unload")
 		msg.post("#map_proxy", "load")
+		self.map_loaded = true
 	end
 	if message_id == hash("load_location_from_map") then
-		msg.post("#map_proxy", "unload")
-		msg.post("#area_proxy", "load")
+		if self.map_loaded then
+			self.map_loaded = false
+			msg.post("#map_proxy", "unload")
+			msg.post("#area_proxy", "load")
+			self.area_loaded = true
+		end
 	end
 	if message_id == hash("reload_location_from_connector") then
 		msg.post("#area_proxy", "unload")
-		-- self.level_loaded = false
+		self.area_loaded = false
 	end
-
+	if message_id == hash("return_to_map_from_location") then
+		self.map_loaded = true
+		msg.post("#area_proxy", "unload")
+		msg.post("#map_proxy", "load")
+	end
+	if message_id == hash("return_to_dashboard_from_map") then
+		self.map_loaded = false
+		msg.post("#map_proxy", "unload")
+		msg.post("#dashboard_proxy", "load")
+	end
 end

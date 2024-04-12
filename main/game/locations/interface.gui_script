@@ -1,0 +1,70 @@
+local onscreen = require "in.onscreen"
+local button = require "in.button"
+
+local post_to_listener
+
+local function on_analog(action_id, node, action)
+	post_to_listener(action_id, action)
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	self.analog = {}
+	self.buttons = {}
+	self.music = true
+
+	post_to_listener = function(message_id, message)
+		if self.listener then
+			msg.post(self.listener, message_id, message or {})
+		end
+	end
+
+	-- register gui buttons
+	button.register(gui.get_node("a_btn"), function()
+		msg.post("/player#player", "a_btn_clicked")
+	end)
+	button.register(gui.get_node("b_btn"), function()
+		print("b button clicked")
+	end)
+	button.register(gui.get_node("quest_btn"), function()
+		print("quest button clicked")
+	end)
+	button.register(gui.get_node("inventory_btn"), function()
+		print("inventory button clicked")
+	end)
+	button.register(gui.get_node("stats_btn"), function()
+		print("stats button clicked")
+	end)
+	button.register(gui.get_node("toggle_music_btn"), function()
+		print("toggle music button clicked")
+	end)
+	button.register(gui.get_node("exit_to_map_btn"), function()
+		timer.delay(0.2, false, function() 
+			msg.post("loader:/game_loader#loader", "return_to_map_from_location")
+		end)
+	end)
+end
+
+function final(self)
+	onscreen.reset()
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("register") then
+		self.listener = sender
+	elseif message_id == hash("unregister") then
+		self.listener = nil
+	elseif message_id == hash("register_analog") then
+		assert(message.id, "You must provide a node id for the analog control")
+		assert(message.radius, "You must provide a radius for the analog control")
+		onscreen.register_analog(gui.get_node(message.id), { radius = message.radius }, on_analog)
+	end
+end
+
+function on_input(self, action_id, action)
+	-- onscreen gui
+	onscreen.on_input(action_id, action)
+	
+	button.on_input(action_id, action)
+end

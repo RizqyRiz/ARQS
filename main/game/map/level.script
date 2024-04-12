@@ -24,6 +24,10 @@ function init(self)
 			local json_data = response.response
 			local data_table = json.decode(json_data)
 
+			local map_name = data_table[1].Name
+			--print(map_name)
+			GAME_CONTROLLER.setMapName(map_name)
+
 			-- store location starting area
 			local locations = data_table[1].Locations
 			local loc_str = locations:gsub("[%[%]%\"]", "")

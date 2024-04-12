@@ -2,8 +2,6 @@ local OS = require("os")
 local GAME_CONTROLLER = require("main.module.game_controller")
 local AREA_CONTROLLER = require("main.module.area_controller")
 local ADDR = GAME_CONTROLLER.address
--- local camera = require "orthographic.camera"
--- local CAMERA_ID = hash("/camera")
 
 local world_border_offset = 1
 local max_row_wall_offset = 0

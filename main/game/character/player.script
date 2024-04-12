@@ -1,7 +1,8 @@
 function init(self)
 	msg.post("interface", "register")
 	msg.post("interface", "register_analog", { id = "analog", radius = 80 })
-	msg.post("interface", "register_button", { id = "interact" })
+	-- msg.post("interface", "register_button", { id = "a_btn" })
+	-- msg.post("interface", "register_button", { id = "b_btn" })
 
 	self.speed = vmath.vector3()
 	self.analog_pressed = false
@@ -80,12 +81,6 @@ function on_message(self, message_id, message, sender)
 		self.interact_npc = false
 		self.interacting_with = ""
 	end
-
-	if message_id == hash("onscreen_button") and message.id == hash("interact") and message.released and self.interact_npc then
-		print("Interacted with npc go id " .. self.interacting_with)
-		msg.post(self.interacting_with, "interact_with_player")
-	end
-
 	if message_id == hash("can_interact_with_item") then
 		--print("Can interact with npc!")
 		self.interact_item = true
@@ -96,7 +91,11 @@ function on_message(self, message_id, message, sender)
 		self.interacting_with = ""
 	end
 
-	if message_id == hash("onscreen_button") and message.id == hash("interact") and message.released and self.interact_item then
+	if message_id == hash("a_btn_clicked") and self.interact_npc then
+		print("Interacted with npc go id " .. self.interacting_with)
+		msg.post(self.interacting_with, "interact_with_player")
+	end
+	if message_id == hash("a_btn_clicked") and self.interact_item then
 		print("Interacted with item go id " .. self.interacting_with)
 		msg.post(self.interacting_with, "interact_with_player")
 	end

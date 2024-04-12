@@ -10,6 +10,7 @@ Game_Data.publishedGames = {}
 
 Game_Data.gameId = ""
 Game_Data.currentGame = {}
+Game_Data.currentMapName = ""
 
 
 Game_Data.questData = {}
@@ -56,6 +57,9 @@ function Game_Data.setCurrentGame(gid, title, lesson, learningoutcomes, player)
 	Game_Data.currentGame[gid] = gameobject
 end
 
+function Game_Data.setMapName(name)
+	Game_Data.currentMapName = name
+end
 
 
 

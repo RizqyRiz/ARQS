@@ -26,6 +26,11 @@ instances {
       type: PROPERTY_TYPE_BOOLEAN
     }
     properties {
+      id: "follow_immediately"
+      value: "true"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
       id: "follow_target"
       value: "/player"
       type: PROPERTY_TYPE_HASH
@@ -282,7 +287,7 @@ embedded_instances {
   id: "interface"
   data: "components {\n"
   "  id: \"interface\"\n"
-  "  component: \"/main/interface.gui\"\n"
+  "  component: \"/main/game/locations/interface.gui\"\n"
   "  position {\n"
   "    x: 0.0\n"
   "    y: 0.0\n"
