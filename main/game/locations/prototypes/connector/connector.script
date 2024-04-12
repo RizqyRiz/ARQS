@@ -8,7 +8,7 @@ function on_message(self, message_id, message, sender)
 				connector_instance = "/instance" .. connector_id
 				adjacent_area = AREA_CONTROLLER.connectors[hash(connector_instance)]
 				AREA_CONTROLLER.setCurrentRoom(adjacent_area)
-				msg.post("loader:/game_loader#loader", "reload_location_from_connector")
+				msg.post("loader:/game_loader#loader", "load_new_room")
 				--print(adjacent_area)
 				--print(sender, connector_id)
 			else

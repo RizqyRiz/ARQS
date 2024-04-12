@@ -14,7 +14,7 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("collision_response") and self.pressed == true then
 		if message.group == hash("location") then
-			msg.post("loader:/game_loader#loader", "load_location_from_map")
+			msg.post("loader:/game_loader#loader", "load_game_level")
 		end
 	end
 end
