@@ -7,7 +7,7 @@ const connection = mysql.createConnection({
     host: '34.29.245.234',
     user: 'user',
     password: 'test@123',
-    database: 'arqs'
+    database: 'arqs',
     port: '3306'
 });
 
