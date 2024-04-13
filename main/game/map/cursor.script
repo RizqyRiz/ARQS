@@ -7,14 +7,14 @@ end
 
 function update(self, dt)
 	local pos = go.get_position()
-	label.set_text("#cursorLabel", "---- x: " .. pos.x .. "  y: " .. pos.y)
+	--label.set_text("#cursorLabel", "---- x: " .. pos.x .. "  y: " .. pos.y)
 	self.collision_id = nil
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("collision_response") and self.pressed == true then
 		if message.group == hash("location") then
-			msg.post("loader:/game_loader#loader", "load_game_level")
+			msg.post("loader:/game_loader#loader", "load_location_from_map")
 		end
 	end
 end
@@ -29,13 +29,13 @@ function on_input(self, action_id, action)
 			-- When the action reflects a press
 			msg.post("#collisionobject", "enable")
 			self.pressed = true
-			print("Input press detected at ", action_pos)
+			--print("Input press detected at ", action_pos)
 			
 		elseif action.released then
 			-- When the action reflects a release
 			msg.post("#collisionobject", "disable")
 			self.pressed = false
-			print("Input release detected at ", action_pos)
+			--print("Input release detected at ", action_pos)
 		end
 	end
 end

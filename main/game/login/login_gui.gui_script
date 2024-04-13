@@ -1,0 +1,66 @@
+local GAME_CONTROLLER = require("main.module.game_controller")
+local ADDR = GAME_CONTROLLER.address
+
+local dirtylarry = require "dirtylarry/dirtylarry"
+
+local function initialize_arqs_engine()
+	msg.post("loader:/game_loader#loader", "load_dashboard_from_login")
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+end
+
+function on_input(self, action_id, action)
+	self.username = dirtylarry:input("username", action_id, action, gui.KEYBOARD_TYPE_DEFAULT, "Enter username.")
+	self.password = dirtylarry:input("password", action_id, action, gui.KEYBOARD_TYPE_PASSWORD, "Enter password.")
+	
+	dirtylarry:button("submit", action_id, action, function ()
+		local feedback = gui.get_node("feedback_message")
+
+		local payload = {
+			username = tostring(self.username),
+			password = tostring(self.password)
+		}
+
+		local json_payload = json.encode(payload)
+		--pprint(json_payload)
+
+		local headers = {
+			["Content-Type"] = "application/json"
+		}
+
+		http.request(ADDR .. "api/arqs/login", "POST", function(self, id, response)
+			if response.status == 200 or response.status == 304 then
+				local data = response.response
+				local user_data = json.decode(data)
+
+				GAME_CONTROLLER.setUID(user_data.UserID)
+				GAME_CONTROLLER.setUser(user_data.UserID, user_data.Username, user_data.FirstName, user_data.SecondName)
+				
+				-- print("Login successful")
+				gui.set_color(feedback, vmath.vector4(0, 0.7058823529411765, 0, 1))
+				gui.set_text(feedback, "Login Successful")
+
+				http.request(ADDR .. "api/arqs/games", "GET", function(self, id, response)
+					if response.status == 200 or response.status == 304 then
+						local data = response.response
+						local games = json.decode(data)
+
+						for i, v in ipairs(games) do
+							GAME_CONTROLLER.addGame(v.GID, v.Name, v.FirstName, v.SecondName)
+						end 
+					end
+				end)
+
+				timer.delay(1, false, initialize_arqs_engine)
+				
+			else
+				-- print("Invalid credentials")
+				gui.set_text(feedback, "Incorrect username or password")
+				print("Error:", response.response)
+				-- Handle other errors here
+			end
+		end, headers, json_payload)
+	end)
+end

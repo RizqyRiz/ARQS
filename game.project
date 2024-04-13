@@ -1,6 +1,6 @@
 [bootstrap]
 main_collection = /main/game/loader.collectionc
-render = /builtins/render/default.renderc
+render = /orthographic/render/orthographic.renderc
 
 [script]
 shared_state = 1
@@ -20,6 +20,8 @@ title = ARQSPrototype
 developer = Danial Bakar
 dependencies#0 = https://github.com/britzl/defold-input/archive/master.zip
 dependencies#1 = https://github.com/britzl/defold-orthographic/archive/master.zip
+dependencies#2 = https://github.com/andsve/dirtylarry/archive/master.zip
+dependencies#3 = https://github.com/britzl/gooey/archive/master.zip
 
 [input]
 game_binding = /builtins/input/all.input_bindingc

@@ -1,0 +1,128 @@
+local onscreen = require "in.onscreen"
+local button = require "in.button"
+
+local PLAYER_CONTROLLER = require("main.module.player_controller")
+
+local post_to_listener
+
+local function on_analog(action_id, node, action)
+	post_to_listener(action_id, action)
+end
+
+local function set_text(node_name, text)
+	-- Get the GUI node
+	local node = gui.get_node(node_name)
+	if node then
+		-- Set the text value
+		gui.set_text(node, text)
+	else
+		print("Node '" .. node_name .. "' not found.")
+	end
+end
+
+local function menu_handler(option)
+	if option == nil then
+		timer.delay(0.1, false, function()
+			gui.set_enabled(gui.get_node("player_controls"), true)
+			gui.set_enabled(gui.get_node("popup_menu"), false)
+		end)
+	else
+		timer.delay(0.1, false, function()
+			gui.set_enabled(gui.get_node("player_controls"), false)
+			gui.set_enabled(gui.get_node("popup_menu"), true)
+			gui.set_enabled(gui.get_node("quest_details"), false)
+			gui.set_enabled(gui.get_node("inventory_details"), false)
+			gui.set_enabled(gui.get_node("stats_details"), false)
+			if option == "quest" then
+				gui.set_enabled(gui.get_node("quest_details"), true)
+			elseif option == "inventory" then
+				gui.set_enabled(gui.get_node("inventory_details"), true)
+			elseif option == "stats" then
+				gui.set_enabled(gui.get_node("stats_details"), true)
+			end
+		end)
+	end
+end
+
+local function toggle_music(music)
+	local btn_image = gui.get_node("toggle_music_btn")
+
+	if music then
+		print("music is now off")
+		gui.play_flipbook(btn_image, "turn_music_on")
+		set_text("toggle_music_text", "Music On")
+	else
+		print("music is now on")
+		gui.play_flipbook(btn_image, "turn_music_off")
+		set_text("toggle_music_text", "Music Off")
+	end
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	self.analog = {}
+	self.buttons = {}
+	self.music = true
+
+	post_to_listener = function(message_id, message)
+		if self.listener then
+			msg.post(self.listener, message_id, message or {})
+		end
+	end
+
+	-- register gui buttons
+	timer.delay(0.2, false, function()
+		button.register(gui.get_node("a_btn"), function()
+			msg.post(PLAYER_CONTROLLER.goid, "a_btn_clicked")
+			--print(PLAYER_CONTROLLER.goid, "has clicked the A button")
+		end)
+	end)
+	button.register(gui.get_node("b_btn"), function()
+		print("b button clicked")
+	end)
+	button.register(gui.get_node("quest_btn"), function()
+		menu_handler("quest")
+	end)
+	button.register(gui.get_node("inventory_btn"), function()
+		menu_handler("inventory")
+	end)
+	button.register(gui.get_node("stats_btn"), function()
+		menu_handler("stats")
+	end)
+	button.register(gui.get_node("toggle_music_btn"), function()
+		toggle_music(self.music)
+		self.music = not self.music
+	end)
+	button.register(gui.get_node("exit_to_map_btn"), function()
+		timer.delay(0.1, false, function() 
+			msg.post("loader:/game_loader#loader", "return_to_map_from_location")
+		end)
+	end)
+	button.register(gui.get_node("close_popup_box"), function()
+		menu_handler()
+	end)
+end
+
+function final(self)
+	onscreen.reset()
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("register") then
+		self.listener = sender
+	elseif message_id == hash("unregister") then
+		self.listener = nil
+	elseif message_id == hash("register_analog") then
+		assert(message.id, "You must provide a node id for the analog control")
+		assert(message.radius, "You must provide a radius for the analog control")
+		onscreen.register_analog(gui.get_node(message.id), { radius = message.radius }, on_analog)
+	end
+end
+
+function on_input(self, action_id, action)
+	-- onscreen gui
+	onscreen.on_input(action_id, action)
+	
+	button.on_input(action_id, action)
+end

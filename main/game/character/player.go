@@ -26,6 +26,7 @@ embedded_components {
   "mask: \"connector\"\n"
   "mask: \"item\"\n"
   "mask: \"npc\"\n"
+  "mask: \"prop\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
   "    shape_type: TYPE_BOX\n"

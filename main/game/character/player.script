@@ -1,19 +1,20 @@
 function init(self)
 	msg.post("interface", "register")
 	msg.post("interface", "register_analog", { id = "analog", radius = 80 })
-	msg.post("interface", "register_button", { id = "interact" })
 
 	self.speed = vmath.vector3()
 	self.analog_pressed = false
 	self.interact_npc = false
 	self.interact_item = false
+	self.interact_prop = false
 	self.interacting_with = ""
-	print(msg.url())
+	-- print(msg.url())
 end
 
 function update(self, dt)
 	go.set_position(go.get_position() + self.speed * dt)
 
+	-- handle player animation
 	if self.speed.x ~= 0 or self.speed.y ~= 0 then
 		-- Determine the movement direction
 		if self.speed.x < 0 then
@@ -41,6 +42,7 @@ end
 
 
 function on_message(self, message_id, message, sender)
+	-- handle collision corrections
 	if message_id == hash("contact_point_response") then
 		if message.group == hash("obstacle") then
 			local normal = message.normal
@@ -57,6 +59,7 @@ function on_message(self, message_id, message, sender)
 		end
 	end
 
+	-- handle player movements
 	if message_id == hash("onscreen_analog") then
 		if message.pressed and not self.analog_pressed then
 			self.analog_pressed = true
@@ -70,22 +73,17 @@ function on_message(self, message_id, message, sender)
 		end
 	end
 
+	-- handle interactions
 	if message_id == hash("can_interact_with_npc") then
-		--print("Can interact with npc!")
+		print("Can interact with npc!")
 		self.interact_npc = true
 		self.interacting_with = sender
 		-- print(tostring(sender))
 	elseif message_id == hash("cannot_interact_with_npc") then
-		--print("Cannot interact with npc!")
+		print("Cannot interact with npc!")
 		self.interact_npc = false
 		self.interacting_with = ""
 	end
-
-	if message_id == hash("onscreen_button") and message.id == hash("interact") and message.released and self.interact_npc then
-		print("Interacted with npc go id " .. self.interacting_with)
-		msg.post(self.interacting_with, "interact_with_player")
-	end
-
 	if message_id == hash("can_interact_with_item") then
 		--print("Can interact with npc!")
 		self.interact_item = true
@@ -95,9 +93,26 @@ function on_message(self, message_id, message, sender)
 		self.interact_item = false
 		self.interacting_with = ""
 	end
+	if message_id == hash("can_interact_with_prop") then
+		--print("Can interact with npc!")
+		self.interact_prop = true
+		self.interacting_with = sender
+	elseif message_id == hash("cannot_interact_with_prop") then
+		--print("Cannot interact with npc!")
+		self.interact_prop = false
+		self.interacting_with = ""
+	end
 
-	if message_id == hash("onscreen_button") and message.id == hash("interact") and message.released and self.interact_item then
+	if message_id == hash("a_btn_clicked") and self.interact_npc then
+		print("Interacted with npc go id " .. self.interacting_with)
+		msg.post(self.interacting_with, "interact_with_player")
+	end
+	if message_id == hash("a_btn_clicked") and self.interact_item then
 		print("Interacted with item go id " .. self.interacting_with)
+		msg.post(self.interacting_with, "interact_with_player")
+	end
+	if message_id == hash("a_btn_clicked") and self.interact_prop then
+		print("Interacted with prop go id " .. self.interacting_with)
 		msg.post(self.interacting_with, "interact_with_player")
 	end
 end

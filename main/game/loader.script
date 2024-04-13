@@ -4,43 +4,73 @@ local AREA_CONTROLLER = require("main.module.area_controller")
 function init(self)
 	msg.post(".", "acquire_input_focus")
 	self.map_loaded = false
-	self.level_loaded = false
-	print(msg.url())
-
-	-- Chemist Land: 1711913872541
-	-- Game of All Time: 1703927372805
-	local tempId = "1711913872541"
-	GAME_CONTROLLER.setGameId(tempId)
+	self.area_loaded = false
 	
-	msg.post("#map_proxy", "load")
+	msg.post("#login_proxy", "load")
 end
 
 function on_message(self, message_id, message, sender)
+	-- on proxy load
 	if message_id == hash("proxy_loaded") then
-		if self.map_loaded == false then
+		-- load up login screen
+		if sender == msg.url("loader:/game_loader#login_proxy") then
+			msg.post("#login_proxy", "init")
+			msg.post("#login_proxy", "enable")
+		end
+		-- load up dashboard screen
+		if sender == msg.url("loader:/game_loader#dashboard_proxy") then
+			msg.post("#dashboard_proxy", "init")
+			msg.post("#dashboard_proxy", "enable")
+		end
+		-- load up game map screen
+		if sender == msg.url("loader:/game_loader#map_proxy") then
 			msg.post("#map_proxy", "init")
 			msg.post("#map_proxy", "enable")
-			self.map_loaded = true
-			self.level_loaded = false
 		end
-		if self.level_loaded == false then
+		-- load up game level screen
+		if sender == msg.url("loader:/game_loader#area_proxy") then
 			msg.post("#area_proxy", "init")
 			msg.post("#area_proxy", "enable")
-			self.level_loaded = true
-			self.map_loaded = false
 		end
 	end
+
+	-- on proxy unloaded
 	if message_id == hash("proxy_unloaded") then
-		if self.level_loaded == false then
+		if sender == msg.url("loader:/game_loader#area_proxy") and self.area_loaded == false and self.map_loaded == false then
 			msg.post("#area_proxy", "load")
 		end
 	end
-	if message_id == hash("load_game_level") then
-		msg.post("#map_proxy", "unload")
-		msg.post("#area_proxy", "load")
+
+	-- custom message ids
+	if message_id == hash("load_dashboard_from_login") then
+		msg.post("#login_proxy", "unload")
+		msg.post("#dashboard_proxy", "load")
 	end
-	if message_id == hash("load_new_room") then
+	if message_id == hash("load_game_from_dashboard") then
+		msg.post("#dashboard_proxy", "unload")
+		msg.post("#map_proxy", "load")
+		self.map_loaded = true
+	end
+	if message_id == hash("load_location_from_map") then
+		if self.map_loaded then
+			self.map_loaded = false
+			msg.post("#map_proxy", "unload")
+			msg.post("#area_proxy", "load")
+			self.area_loaded = true
+		end
+	end
+	if message_id == hash("reload_location_from_connector") then
 		msg.post("#area_proxy", "unload")
-		self.level_loaded = false
+		self.area_loaded = false
+	end
+	if message_id == hash("return_to_map_from_location") then
+		self.map_loaded = true
+		msg.post("#area_proxy", "unload")
+		msg.post("#map_proxy", "load")
+	end
+	if message_id == hash("return_to_dashboard_from_map") then
+		self.map_loaded = false
+		msg.post("#map_proxy", "unload")
+		msg.post("#dashboard_proxy", "load")
 	end
 end

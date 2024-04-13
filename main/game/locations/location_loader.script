@@ -1,9 +1,10 @@
+local camera = require("orthographic.camera")
+
 local OS = require("os")
 local GAME_CONTROLLER = require("main.module.game_controller")
 local AREA_CONTROLLER = require("main.module.area_controller")
+local PLAYER_CONTROLLER = require("main.module.player_controller")
 local ADDR = GAME_CONTROLLER.address
--- local camera = require "orthographic.camera"
--- local CAMERA_ID = hash("/camera")
 
 local world_border_offset = 1
 local max_row_wall_offset = 0
@@ -26,6 +27,12 @@ local function delete_go(position)
 		go.delete(id)
 		go_pos[position.x .. "," .. position.y] = nil
 	end
+end
+
+local function spawn_player()
+	local x, y = PLAYER_CONTROLLER.location.x, PLAYER_CONTROLLER.location.y + world_border_offset
+	local pos = vmath.vector3(x * 80, y * 80, 0.9)
+	local id = factory.create("#player_factory", pos)
 end
 
 local function generate_quest_go()
@@ -77,7 +84,10 @@ end
 
 function init(self)
 	self.bounds = true
+	self.player_spawn = false
 
+	-- spawn_player()
+	
 	http.request(ADDR .. "api/arqs/locations/area/" .. AREA_CONTROLLER.currentRoom, "GET", function(self, id, response)
 		if response.status == 200 or response.status == 304 then
 			local json_data = response.response
@@ -198,7 +208,7 @@ function init(self)
 							local pos = vmath.vector3((x + world_border_offset) * 80, (y + world_border_offset) * 80, 0.8)
 							delete_go(pos)
 							go.set_position(pos, sprite_url)
-							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room, x, y, "south")
 						else
 							--pprint("This stairs is going down!")
 							factory.unload("#connector_factory")
@@ -208,7 +218,7 @@ function init(self)
 							local pos = vmath.vector3((x + world_border_offset) * 80, (y + world_border_offset) * 80, 0.8)
 							delete_go(pos)
 							go.set_position(pos, sprite_url)
-							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room, x, y, "south")
 						end
 					else
 						if direction == "east" or direction == "west" then
@@ -223,7 +233,7 @@ function init(self)
 							local pos = vmath.vector3((x + x_offset) * 80, y * 80, 0.5)
 							delete_go(pos)
 							go.set_position(pos, sprite_url)
-							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room, x, y, direction)
 						elseif direction == "north" then
 							factory.unload("#connector_factory")
 							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/north_door_prototype.goc")
@@ -235,7 +245,7 @@ function init(self)
 							go.set_position(door_pos, sprite_url)
 							msg.post(sprite_url, "play_animation", {id = hash("Connector-Door-1")})
 							tilemap.set_tile("/tilemap#arqs_area", "ground", x + 1 + world_border_offset, y + 1 + world_border_offset, 150)		-- wall around door since door width != 80px
-							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room, x, y, direction)
 						else
 							factory.unload("#connector_factory")
 							factory.set_prototype("#connector_factory", "/main/game/locations/prototypes/connector/north_south_door_prototype.goc")
@@ -244,14 +254,14 @@ function init(self)
 							local pos = vmath.vector3((x + world_border_offset) * 80, 0, 0.5)
 							delete_go(pos)
 							go.set_position(pos, sprite_url)
-							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room)
+							AREA_CONTROLLER.addConnectors(id, connector.adjacent_room, x, y, direction)
 						end
 					end
 				end
 
 				-- handle objects in the area
 				local objects = json.decode(v.Objects)
-				for _, object in pairs(objects) do
+				for i, object in pairs(objects) do
 					local object_Data = object_Sprites.objects[tonumber(object.id)] or {name = "Miscellaneous-Bin-2", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"}
 					local sprite_name = object_Data.name
 					local prototype = object_Data.prototype
@@ -268,16 +278,30 @@ function init(self)
 					go.set_position(pos, sprite_url)
 					msg.post(sprite_url, "play_animation", {id = hash(sprite_name)})
 
+					--print(tonumber(object.id), sprite_name)
 					--print(sprite_name, x, y)
+				end
+
+				if self.player_spawn == false then
+					local x = PLAYER_CONTROLLER.location.x + world_border_offset
+					local y = max_row_wall_offset - PLAYER_CONTROLLER.location.y + world_border_offset 
+					local pos = vmath.vector3(x * 80 + 40, y * 80 + 40, 0.9)
+					local id = factory.create("#player_factory", pos)
+					--msg.post("location:/interface#interface", "wompwomp")
+					self.player_spawn = true
+
+					PLAYER_CONTROLLER.setGoId(id)
+
+					camera.follow(go.get_id("/camera"), id)
 				end
 
 			end
 
-			if next(GAME_CONTROLLER.questObjects) == nil and next(GAME_CONTROLLER.npcData) == nil and next(GAME_CONTROLLER.itemData) == nil then
-				timer.delay(1, false, generate_quest_go)
-			else
-				generate_quest_go()
-			end
+			-- if next(GAME_CONTROLLER.questObjects) == nil and next(GAME_CONTROLLER.npcData) == nil and next(GAME_CONTROLLER.itemData) == nil then
+			-- 	timer.delay(1, false, generate_quest_go)
+			-- else
+			-- 	generate_quest_go()
+			-- end
 			
 		else
 			print("Error: " .. response.status)

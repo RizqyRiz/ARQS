@@ -1,0 +1,25 @@
+local button = require "in.button"
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	button.register(gui.get_node("btn"), function()
+		print("btn is clicked")
+		timer.delay(0.1, false, function()
+			gui.set_enabled(gui.get_node("popup"), true)
+			gui.set_enabled(gui.get_node("btn"), false)
+		end)
+	end)
+
+	button.register(gui.get_node("no"), function() 
+		print("x is clicked")
+		timer.delay(0.1, false, function()
+			gui.set_enabled(gui.get_node("popup"), false)
+			gui.set_enabled(gui.get_node("btn"), true)
+		end)
+	end)
+end
+
+function on_input(self, action_id, action)
+	button.on_input(action_id, action)
+end
