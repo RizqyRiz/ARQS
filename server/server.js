@@ -179,7 +179,7 @@ app.get('/api/arqs/game/quest/:gameId', (req, res) => {
     const gameId = req.params.gameId;
 
     const query = `
-        SELECT q.QID, q.Name, q.Scenario, q.Actions, q.Json, q.Active 
+        SELECT q.QID, q.Name, q.Scenario, q.Actions, q.Json, q.Active, gq.QOrder 
         FROM quests q 
         JOIN games_quests gq on q.QID = gq.QID
         WHERE gq.GID = ?
@@ -226,6 +226,26 @@ app.get('/api/arqs/game/item/:itemId', (req, res) => {
     `;
 
     connection.query(query, [itemId], (err, results) => {
+        if (err) {
+            console.error('Error retrieving data: ', err);
+            res.status(500).send('Error retrieving NPC data from database.');
+        } else {
+            res.status(200).json(results);
+        }
+    })
+})
+
+// fetch props data
+app.get('/api/arqs/game/prop/:propId', (req, res) => {
+    const propId = req.params.propId;
+
+    const query = `
+        SELECT o.OID, o.Name, o.Description 
+        FROM objects o 
+        WHERE o.OID = ?
+    `;
+
+    connection.query(query, [propId], (err, results) => {
         if (err) {
             console.error('Error retrieving data: ', err);
             res.status(500).send('Error retrieving NPC data from database.');

@@ -1,6 +1,7 @@
 local AREA_CONTROLLER = require("main.module.area_controller")
 local GAME_CONTROLLER = require("main.module.game_controller")
 local ADDR = GAME_CONTROLLER.address
+local PLAYER_CONTROLLER = require("main.module.player_controller")
 
 local function generate_location_go()
 	for i, v in pairs(AREA_CONTROLLER.locationData) do
@@ -43,6 +44,9 @@ function init(self)
 					for i, v in ipairs(loc_data) do
 						AREA_CONTROLLER.addLocations(v.LID, v.Name, v.X, v.Y, v.Player_Start_Point)
 					end
+
+					PLAYER_CONTROLLER.setLocation(start_loc.x, start_loc.y)
+
 				end
 			end)
 

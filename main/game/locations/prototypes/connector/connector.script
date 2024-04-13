@@ -1,4 +1,22 @@
 local AREA_CONTROLLER = require("main.module.area_controller")
+local PLAYER_CONTROLLER = require("main.module.player_controller")
+
+local function set_new_player_loc(x, y, direction)
+	local x = x
+	local y = y
+	if direction == "north" then
+		y = y + 1
+	elseif direction == "south" then
+		y = y - 1
+	elseif direction == "east" then
+		x = x + 1
+	elseif direction == "west" then
+		x = x - 1
+	end
+	
+	
+	PLAYER_CONTROLLER.setLocation(x, y)
+end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("contact_point_response") then
@@ -6,11 +24,13 @@ function on_message(self, message_id, message, sender)
 			local connector_id = string.match(tostring(sender), "/instance(%d+)")
 			if connector_id then
 				connector_instance = "/instance" .. connector_id
-				adjacent_area = AREA_CONTROLLER.connectors[hash(connector_instance)]
+				connector_details = AREA_CONTROLLER.connectors[hash(connector_instance)]
+				adjacent_area = connector_details.adjacent_area
 				AREA_CONTROLLER.setCurrentRoom(adjacent_area)
+
+				--set_new_player_loc(connector_details.x, connector_details.y, connector_details.direction)
+				
 				msg.post("loader:/game_loader#loader", "reload_location_from_connector")
-				--print(adjacent_area)
-				--print(sender, connector_id)
 			else
 				print("Connector ID not found in the URL")
 			end

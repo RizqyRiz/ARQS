@@ -61,6 +61,15 @@ animations {
   flip_vertical: 0
 }
 animations {
+  id: "prop_indicator"
+  start_tile: 22
+  end_tile: 22
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
   id: "quest"
   start_tile: 6
   end_tile: 6
@@ -118,6 +127,15 @@ animations {
   id: "turn_music_on"
   start_tile: 67
   end_tile: 67
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 30
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "x_btn"
+  start_tile: 24
+  end_tile: 24
   playback: PLAYBACK_ONCE_FORWARD
   fps: 30
   flip_horizontal: 0

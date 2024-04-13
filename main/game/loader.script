@@ -14,25 +14,21 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("proxy_loaded") then
 		-- load up login screen
 		if sender == msg.url("loader:/game_loader#login_proxy") then
-			print("The sender of this proxy_loaded message is " .. sender)
 			msg.post("#login_proxy", "init")
 			msg.post("#login_proxy", "enable")
 		end
 		-- load up dashboard screen
 		if sender == msg.url("loader:/game_loader#dashboard_proxy") then
-			print("The sender of this proxy_loaded message is " .. sender)
 			msg.post("#dashboard_proxy", "init")
 			msg.post("#dashboard_proxy", "enable")
 		end
 		-- load up game map screen
 		if sender == msg.url("loader:/game_loader#map_proxy") then
-			print("The sender of this proxy_loaded message is " .. sender)
 			msg.post("#map_proxy", "init")
 			msg.post("#map_proxy", "enable")
 		end
 		-- load up game level screen
 		if sender == msg.url("loader:/game_loader#area_proxy") then
-			print("The sender of this proxy_loaded message is " .. sender)
 			msg.post("#area_proxy", "init")
 			msg.post("#area_proxy", "enable")
 		end

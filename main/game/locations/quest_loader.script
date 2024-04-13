@@ -1,8 +1,9 @@
 local GAME_CONTROLLER = require("main.module.game_controller")
+local QUEST_CONTROLLER = require("main.module.quest_controller")
 local ADDR = GAME_CONTROLLER.address
 
-function set_npc(v)
-	http.request(ADDR .. "api/arqs/game/character/" .. v.gameobject, "GET", function(self, id, response)
+function set_npc(qid, go)
+	http.request(ADDR .. "api/arqs/game/character/" .. go.gameobject, "GET", function(self, id, response)
 		if response.status == 200 or response.status == 304 then
 			local data = response.response
 			local npc_data = json.decode(data)
@@ -26,14 +27,14 @@ function set_npc(v)
 						prototype = "/main/game/quest/prototypes/NPC/female_kid_prototype.goc"
 					end
 				end
-				GAME_CONTROLLER.addNPCs(v.NPCID, v.Name:gsub("%%20", " "), v.Background:gsub("%%20", " "), gender, age, prototype, npc_visuals)
+				QUEST_CONTROLLER.addNPC(qid, v.NPCID, v.Name:gsub("%%20", " "), v.Background:gsub("%%20", " "), gender, age, prototype, npc_visuals)
 			end
 		end
 	end)
 end
 
-function set_items(v)
-	http.request(ADDR .. "api/arqs/game/item/" .. v.gameobject, "GET", function(self, id, response)
+function set_items(qid, go)
+	http.request(ADDR .. "api/arqs/game/item/" .. go.gameobject, "GET", function(self, id, response)
 		if response.status == 200 or response.status == 304 then
 			local data = response.response
 			local item_data = json.decode(data)
@@ -42,7 +43,23 @@ function set_items(v)
 				-- pprint(v.IID, v.Name:gsub("%%20", " "), v.Description:gsub("%%20", " "), v.Link, v.Readable, v.Destroyable, v.Content)
 				local prototype = "/main/game/quest/prototypes/item/item_prototype.goc"
 				
-				GAME_CONTROLLER.addItems(v.IID, v.Name:gsub("%%20", " "), v.Description:gsub("%%20", " "), v.Link, v.Readable, v.Destroyable, v.Content, prototype)
+				QUEST_CONTROLLER.addItem(qid, v.IID, v.Name:gsub("%%20", " "), v.Description:gsub("%%20", " "), v.Link, v.Readable, v.Destroyable, v.Content, prototype)
+			end
+		end
+	end)
+end
+
+function set_props(qid, go)
+	http.request(ADDR .. "api/arqs/game/prop/" .. go.gameobject, "GET", function(self, id, response)
+		if response.status == 200 or response.status == 304 then
+			local data = response.response
+			local prop_data = json.decode(data)
+
+			for i, v in ipairs(prop_data) do
+				-- pprint(v.IID, v.Name:gsub("%%20", " "), v.Description:gsub("%%20", " "), v.Link, v.Readable, v.Destroyable, v.Content)
+				local prototype = "/main/game/quest/prototypes/prop/prop_prototype.goc"
+
+				QUEST_CONTROLLER.addProp(qid, v.OID, v.Name:gsub("%%20", " "), v.Description:gsub("%%20", " "), prototype)
 			end
 		end
 	end)
@@ -61,21 +78,22 @@ function init(self)
 				quest_data = json.decode(v.Json)
 				quest_id = v.QID
 				quest_initiator = quest_data.initiator
-				GAME_CONTROLLER.setQuestData(quest_initiator, quest_id, quest_data)
-			end
+				quest_order = v.QOrder
+				QUEST_CONTROLLER.addQuest(quest_initiator, quest_id, quest_data, quest_order, false, false)
 
-			for i, v in ipairs(quest_data.tasks) do
-				for i, v in ipairs(v.gameobjects) do
-					GAME_CONTROLLER.setQuestObjects(v.gameobject, v.location, v.area, v.x, v.y, v.foreaft, v.inside_object, quest_id)
-					if string.sub(v.gameobject, 1, 3) == "NPC" then
-						set_npc(v)
-					end
-					if string.sub(v.gameobject, 1, 3) == "IID" then
-						local prototype = ""
-						if v.inside_object == "true" then
-							
+				for _, task in ipairs(quest_data.tasks) do
+					for _, go in ipairs(task.gameobjects) do
+						--GAME_CONTROLLER.setQuestObjects(v.gameobject, v.location, v.area, v.x, v.y, v.foreaft, v.inside_object, quest_id)
+						-- pprint(v.gameobjects)
+						if string.sub(go.gameobject, 1, 3) == "NPC" then
+							set_npc(quest_id, go)
 						end
-						set_items(v)
+						if string.sub(go.gameobject, 1, 3) == "IID" then
+							set_items(quest_id, go)
+						end
+						if string.sub(go.gameobject, 1, 3) == "OID" then
+							set_props(quest_id, go)
+						end
 					end
 				end
 			end
@@ -83,4 +101,75 @@ function init(self)
 			print("Error: " .. response.status)
 		end
 	end)
+
+	timer.delay(0.2, false, function()
+		factory.unload("#questGo_factory")
+		factory.set_prototype("#questGo_factory", "/main/game/quest/prototypes/prop/prop_prototype.goc")
+		local id = factory.create("#questGo_factory")
+		-- print(id .. " generated")
+		--GAME_CONTROLLER.addNPCGO(id, i)
+		local sprite_url = msg.url(nil, id, "sprite")
+		local pos = vmath.vector3(2 * 80, 2 * 80, 0.8)
+		--local pos = vmath.vector3(x * 80, y * 80, 0.8)
+		go.set_position(pos, sprite_url)
+	end)
+
+	-- timer.delay(0.2, false, function()
+	-- 	--id, npc = next(QUEST_CONTROLLER.npcList)
+	-- 	for id, npc in pairs(QUEST_CONTROLLER.npcList) do
+	-- 		pprint("NPCID:" .. npc.npcid, ", Name:" .. npc.name, ", for QID:" .. npc.qid, ", prototype:" .. npc.prototype)
+	-- 	end
+	-- end)
+-- 
+-- 	timer.delay(0.2, false, function()
+-- 		--id, item = next(QUEST_CONTROLLER.itemList)
+-- 		for id, item in pairs(QUEST_CONTROLLER.itemList) do
+-- 			print("IID:", item.iid, "Name:", item.name, ", for QID:", item.qid)
+-- 		end
+-- 	end)
+-- 
+-- 	timer.delay(0.2, false, function()
+-- 		--id, item = next(QUEST_CONTROLLER.itemList)
+-- 		for id, prop in pairs(QUEST_CONTROLLER.propList) do
+-- 			print("OID:", prop.oid, "Name:", prop.name, ", for QID:", prop.qid)
+-- 		end
+-- 	end)
+
+-- 	-- QID12760478231712158675529
+-- 	timer.delay(0.2, false, function()
+-- 		-- start a quest
+-- 		-- QUEST_CONTROLLER.startQuest("QID12760478231712158675529", true)
+-- 		-- QUEST_CONTROLLER.startQuest("QID11232744861711915217388", true)
+-- 		-- QUEST_CONTROLLER.startQuest("QID78428217681712160240770", true)
+-- 
+-- 		-- complete a quest
+-- 		-- QUEST_CONTROLLER.completeQuest("QID12760478231712158675529", true)
+-- 		-- QUEST_CONTROLLER.completeQuest("QID11232744861711915217388", true)
+-- 		-- QUEST_CONTROLLER.completeQuest("QID78428217681712160240770", true)
+-- 	end)
+-- 
+-- 	-- fetch current active quest
+-- 	timer.delay(0.3, false, function()
+-- 		local id, current_quest = QUEST_CONTROLLER.getCurrentQuest()
+-- 		
+-- 		if id then
+-- 			print("Current quest:", id, "from:", current_quest.initiator_id, "QO:", current_quest.quest_order)
+-- 			--pprint(current_quest)
+-- 		else
+-- 			print("There are no active quest")
+-- 		end
+-- 	end)
+-- 
+-- 	-- fetch next quest 
+-- 	timer.delay(0.4, false, function()
+-- 		local id, next_quest = QUEST_CONTROLLER.getNextQuest()
+-- 
+-- 		if id then
+-- 			-- prints the next quest
+-- 			print("Next quest:", id, "from", next_quest.initiator_id, "QO:", next_quest.quest_order)
+-- 			--pprint(next_quest)
+-- 		else
+-- 			print("There are no more quests")
+-- 		end
+-- 	end)
 end

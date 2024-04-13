@@ -67,6 +67,8 @@ M.objects = {
 	[64] = {name = "Wall-Square Device", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"},
 	[65] = {name = "Wall-Switch", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"},
 	[69] = {name = "Wall-Mirror", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"},
+
+	[73] = {name = "Miscellaneous-Stand", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"}
 }
 
 return M
