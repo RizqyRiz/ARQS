@@ -255,6 +255,11 @@ app.get('/api/arqs/game/prop/:propId', (req, res) => {
     })
 })
 
+app.all('/', (req, res) => {
+    console.log("Just got a request!")
+    res.send('Yo!')
+})
+
 app.listen(3306, () => {
     console.log('Yo!');
 });
