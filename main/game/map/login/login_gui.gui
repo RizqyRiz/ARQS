@@ -1,4 +1,4 @@
-script: "/main/game/login/login_gui.gui_script"
+script: "/main/game/map/login/login_gui.gui_script"
 fonts {
   name: "larryfont"
   font: "/dirtylarry/larryfont.font"

@@ -32,7 +32,7 @@ embedded_instances {
   id: "gui"
   data: "components {\n"
   "  id: \"login_gui\"\n"
-  "  component: \"/main/game/login/login_gui.gui\"\n"
+  "  component: \"/main/game/map/login/login_gui.gui\"\n"
   "  position {\n"
   "    x: 0.0\n"
   "    y: 0.0\n"

@@ -2,7 +2,8 @@ local Game_Data = {}
 
 -- home wifi: 192.168.100.5
 -- utb wifi: 172.16.97.17
-Game_Data.address = "http://192.168.100.4:3000/"
+-- Game_Data.address = "http://192.168.100.4:3000/"
+Game_Data.address = "https://tiny-rose-bat-hat.cyclic.app/"
 Game_Data.currentUID = ""
 Game_Data.userData = {}
 

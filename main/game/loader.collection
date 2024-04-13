@@ -58,7 +58,7 @@ embedded_instances {
   "embedded_components {\n"
   "  id: \"login_proxy\"\n"
   "  type: \"collectionproxy\"\n"
-  "  data: \"collection: \\\"/main/game/login/login.collection\\\"\\n"
+  "  data: \"collection: \\\"/main/game/map/login/login.collection\\\"\\n"
   "exclude: false\\n"
   "\"\n"
   "  position {\n"
