@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 
 const connection = mysql.createConnection({
-    host: 'localhost',
+    host: '192.168.100.4',
     user: 'root',
     password: '',
     database: 'arqs'
