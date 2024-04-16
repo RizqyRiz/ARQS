@@ -22,8 +22,12 @@ M.objects = {
 	[19] = {name = "Furniture-Chair (Right)-1", prototype = "/main/game/locations/prototypes/objects/2x2_prototype.goc"},
 	[20] = {name = "Furniture-Glass Table-1", prototype = "/main/game/locations/prototypes/objects/2x1_prototype.goc"},
 	[21] = {name = "Furniture-Glass Table-2", prototype = "/main/game/locations/prototypes/objects/1x1_prototype.goc"},
+
+	
 	[22] = {name = "Furniture-Office Chair (Back)-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
 	[23] = {name = "Furniture-Office Chair (Front)-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
+
+
 	[24] = {name = "Furniture-Office Chair (Left)-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
 	[25] = {name = "Furniture-Office Chair (Right)-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
 	[26] = {name = "Furniture-Shelf-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
@@ -35,7 +39,11 @@ M.objects = {
 	[32] = {name = "Furniture-Sofa-2", prototype = "/main/game/locations/prototypes/objects/2x2_prototype.goc"},
 	[33] = {name = "Furniture-Table (Horizontal)-1", prototype = "/main/game/locations/prototypes/objects/2x1_prototype.goc"},
 	[34] = {name = "Furniture-Table (Horizontal)-2", prototype = "/main/game/locations/prototypes/objects/2x1_prototype.goc"},
-	[35] = {name = "Furniture-Table (Vertical)-1", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
+
+
+	[35] = {name = "Furniture-Table (Vertical)-1", prototype = "/main/game/locations/prototypes/objects/1x2_solid_prototype.goc"},
+
+
 	[36] = {name = "Furniture-Table (Vertical)-2", prototype = "/main/game/locations/prototypes/objects/1x2_prototype.goc"},
 	[37] = {name = "Furniture-TV Table", prototype = "/main/game/locations/prototypes/objects/2x1_prototype.goc"},
 	[38] = {name = "Furniture-Bench-1", prototype = "/main/game/locations/prototypes/objects/2x2_prototype.goc"},

@@ -75,12 +75,12 @@ function on_message(self, message_id, message, sender)
 
 	-- handle interactions
 	if message_id == hash("can_interact_with_npc") then
-		print("Can interact with npc!")
+		--print("Can interact with npc!")
 		self.interact_npc = true
 		self.interacting_with = sender
 		-- print(tostring(sender))
 	elseif message_id == hash("cannot_interact_with_npc") then
-		print("Cannot interact with npc!")
+		--print("Cannot interact with npc!")
 		self.interact_npc = false
 		self.interacting_with = ""
 	end
@@ -94,25 +94,25 @@ function on_message(self, message_id, message, sender)
 		self.interacting_with = ""
 	end
 	if message_id == hash("can_interact_with_prop") then
-		--print("Can interact with npc!")
+		--print("Can interact with prop!")
 		self.interact_prop = true
 		self.interacting_with = sender
 	elseif message_id == hash("cannot_interact_with_prop") then
-		--print("Cannot interact with npc!")
+		--print("Cannot interact with prop!")
 		self.interact_prop = false
 		self.interacting_with = ""
 	end
 
 	if message_id == hash("a_btn_clicked") and self.interact_npc then
-		print("Interacted with npc go id " .. self.interacting_with)
+		--print("Interacted with npc go id " .. self.interacting_with)
 		msg.post(self.interacting_with, "interact_with_player")
 	end
 	if message_id == hash("a_btn_clicked") and self.interact_item then
-		print("Interacted with item go id " .. self.interacting_with)
+		--print("Interacted with item go id " .. self.interacting_with)
 		msg.post(self.interacting_with, "interact_with_player")
 	end
 	if message_id == hash("a_btn_clicked") and self.interact_prop then
-		print("Interacted with prop go id " .. self.interacting_with)
+		--print("Interacted with prop go id " .. self.interacting_with)
 		msg.post(self.interacting_with, "interact_with_player")
 	end
 end

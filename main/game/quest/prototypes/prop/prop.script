@@ -1,18 +1,46 @@
 local PLAYER_CONTROLLER = require("main.module.player_controller")
+local QUEST_CONTROLLER = require("main.module.quest_controller")
+
+local function janky_animation(hoodini, magic_show)
+	local magic_trick = hoodini
+	local magic_show = magic_show
+	if magic_trick then
+		msg.post("#indicator", "play_animation", {id = hash("prop_indicator")})
+	else
+		msg.post("#indicator", "play_animation", {id = hash("empty")})
+	end
+
+	if not magic_show then
+		timer.delay(1, false, function()
+			janky_animation(not magic_trick, false)
+		end)
+	end
+end
 
 function init(self)
+	self.id = go.get_id()
 	self.can_interact = false
+	janky_animation(true, false)
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("trigger_response") then
 		if message.enter then
-			--msg.post("#indicator", "play_animation", {id = hash("location_indicator")})
+			if QUEST_CONTROLLER.questCompleteTarget and QUEST_CONTROLLER.propGoList[self.id] == QUEST_CONTROLLER.questCompleteTarget then
+				msg.post("location:/interface#interface", "can_hand_in_quest")
+				print("You can hand in the quest now at ", QUEST_CONTROLLER.propGoList[self.id])
+			end
+			
+			--janky_animation(true, true)
 			msg.post(PLAYER_CONTROLLER.goid, "can_interact_with_prop")
 			self.can_interact = true
 		else
+			if QUEST_CONTROLLER.questCompleteTarget and QUEST_CONTROLLER.propGoList[self.id] == QUEST_CONTROLLER.questCompleteTarget then
+				msg.post("location:/interface#interface", "cannot_hand_in_quest")
+			end
+			
 			-- take action for exit
-			--msg.post("#indicator", "play_animation", {id = hash("empty")})
+			--janky_animation(true, false)
 			msg.post(PLAYER_CONTROLLER.goid, "cannot_interact_with_prop")
 			self.can_interact = false
 		end

@@ -16,7 +16,7 @@ components {
 embedded_components {
   id: "indicator"
   type: "sprite"
-  data: "default_animation: \"prop_indicator\"\n"
+  data: "default_animation: \"empty\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "blend_mode: BLEND_MODE_ALPHA\n"
   "textures {\n"
@@ -26,7 +26,7 @@ embedded_components {
   ""
   position {
     x: 40.0
-    y: 110.0
+    y: 100.0
     z: 0.2
   }
   rotation {
@@ -34,6 +34,11 @@ embedded_components {
     y: 0.0
     z: 0.0
     w: 1.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+    z: 1.0
   }
 }
 embedded_components {
@@ -65,7 +70,7 @@ embedded_components {
   "    id: \"\"\n"
   "  }\n"
   "  data: 45.0\n"
-  "  data: 60.0\n"
+  "  data: 80.0\n"
   "  data: 10.0\n"
   "}\n"
   "linear_damping: 0.0\n"

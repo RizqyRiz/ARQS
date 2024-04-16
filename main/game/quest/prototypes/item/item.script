@@ -1,6 +1,9 @@
 local PLAYER_CONTROLLER = require("main.module.player_controller")
+local QUEST_CONTROLLER = require("main.module.quest_controller")
 
 function init(self)
+	self.id = go.get_id()
+	self.qid, self.quest = QUEST_CONTROLLER.getActiveQuest()
 	self.can_interact = false
 end
 
@@ -19,6 +22,23 @@ function on_message(self, message_id, message, sender)
 	end
 
 	if message_id == hash("interact_with_player") then
-		print("Interaction notice from item script!")
+		local iid = QUEST_CONTROLLER.itemGoList[self.id]
+		local iqid = iid .. self.qid
+		local item_data = QUEST_CONTROLLER.itemList[iqid]
+
+		QUEST_CONTROLLER.addToInventory(iqid, iid, item_data)
+		QUEST_CONTROLLER.setItemDialog(iid, item_data.name, item_data.description)
+
+		timer.delay(0.1, false, function()
+			msg.post("location:/interface#interface", "item_interact_popup")
+			--print("msg sent")
+			timer.delay(0.1, false, function()
+				--print("go deleted")
+				go.delete()
+			end)
+		end)
+		
+		-- print("My IID is:", iid)
+		-- print("I'm used for the quest QID:", self.qid)
 	end
 end

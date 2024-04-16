@@ -2,7 +2,9 @@ local Game_Data = {}
 
 -- home wifi: 192.168.100.5
 -- utb wifi: 172.16.97.17
+-- public ip from https://whatismyipaddress.com/: 61.6.220.223
 Game_Data.address = "http://192.168.100.4:3000/"
+--Game_Data.address = "http://sql6.freesqldatabase.com/"
 Game_Data.currentUID = ""
 Game_Data.userData = {}
 
@@ -18,6 +20,12 @@ Game_Data.questObjects = {}
 Game_Data.npcData = {}
 Game_Data.itemData = {}
 Game_Data.npcGO = {}
+
+Game_Data.music = true
+
+function Game_Data.setMusic(state)
+	Game_Data.music = state
+end
 
 function Game_Data.setUID(uid)
 	Game_Data.currentUID = uid

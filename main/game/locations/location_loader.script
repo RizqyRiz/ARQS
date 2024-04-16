@@ -86,6 +86,11 @@ function init(self)
 	self.bounds = true
 	self.player_spawn = false
 
+	--sound.stop("/music#map_music")
+	if GAME_CONTROLLER.music then
+		sound.play("/music#location_music")
+	end
+		
 	-- spawn_player()
 	
 	http.request(ADDR .. "api/arqs/locations/area/" .. AREA_CONTROLLER.currentRoom, "GET", function(self, id, response)
@@ -104,6 +109,7 @@ function init(self)
 				local col_count = 0
 				local max_col = #tile_data_table[1]
 				max_row_wall_offset = #tile_data_table - 2
+				AREA_CONTROLLER.setRoomHeight(max_row_wall_offset)
 
 				-- Handle indoor walls
 				local wall = "Void"
@@ -270,6 +276,9 @@ function init(self)
 					local y = max_row_wall_offset - object.y + world_border_offset + 1
 					local y_offset = tonumber(object.foreaft) * 10
 
+					-- print(object.id, sprite_name)
+					AREA_CONTROLLER.addObjects(object.id, object,x, object.y, object.foreaft)
+
 					factory.unload("#obstacle_factory")
 					factory.set_prototype("#obstacle_factory", prototype)
 					local id = factory.create("#obstacle_factory")
@@ -297,11 +306,8 @@ function init(self)
 
 			end
 
-			-- if next(GAME_CONTROLLER.questObjects) == nil and next(GAME_CONTROLLER.npcData) == nil and next(GAME_CONTROLLER.itemData) == nil then
-			-- 	timer.delay(1, false, generate_quest_go)
-			-- else
-			-- 	generate_quest_go()
-			-- end
+			AREA_CONTROLLER.setCurrentRoomName(data_table[1].Name)
+			AREA_CONTROLLER.setCurrentLevel(data_table[1].Level)
 			
 		else
 			print("Error: " .. response.status)

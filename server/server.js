@@ -3,6 +3,14 @@ const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 
+// const connection = mysql.createConnection({
+//     host: 'sql6.freesqldatabase.com',
+//     user: 'sql6698796',
+//     password: '4Dwuuf1eHn',
+//     database: 'sql6698796',
+//     port: '3306'
+// });
+
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -21,6 +29,11 @@ connection.connect((err) => {
 const app = express();
 
 app.use(bodyParser.json());
+
+// default
+app.get('/', (req, res) => {
+    console.log("Yo")
+});
 
 // login user
 app.post('/api/arqs/login', async (req, res) => {

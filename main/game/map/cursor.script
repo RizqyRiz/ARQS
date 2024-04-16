@@ -14,6 +14,7 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("collision_response") and self.pressed == true then
 		if message.group == hash("location") then
+			sound.stop("/music#map_music")
 			msg.post("loader:/game_loader#loader", "load_location_from_map")
 		end
 	end

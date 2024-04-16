@@ -18,6 +18,9 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
+
+	sound.play("/music#map_music")
+	
 	-- EA: MID31276066781703927429343
 	-- ChemiCo: MID88745638461711914116235
 	http.request(ADDR .. "api/arqs/map/" .. GAME_CONTROLLER.gameId, "GET", function(self, id, response)
@@ -40,6 +43,8 @@ function init(self)
 					local start_loc = json.decode(start_loc_data)
 					local initial_room = start_loc.area
 					AREA_CONTROLLER.setCurrentRoom(initial_room)
+					--pprint(loc_data[1].Name)
+					AREA_CONTROLLER.setCurrentLocationName(string.gsub(loc_data[1].Name, "%%20", " "))
 					
 					for i, v in ipairs(loc_data) do
 						AREA_CONTROLLER.addLocations(v.LID, v.Name, v.X, v.Y, v.Player_Start_Point)

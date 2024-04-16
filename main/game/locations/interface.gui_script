@@ -1,9 +1,38 @@
 local onscreen = require "in.onscreen"
 local button = require "in.button"
 
+local GAME_CONTROLLER = require("main.module.game_controller")
+local AREA_CONTROLLER = require("main.module.area_controller")
 local PLAYER_CONTROLLER = require("main.module.player_controller")
+local QUEST_CONTROLLER = require("main.module.quest_controller")
 
 local post_to_listener
+
+local drag_pos = vmath.vector3()
+local drag = false
+
+local function quest_outcome(self,success)
+	local outcome = {}
+	if success then
+		outcome = QUEST_CONTROLLER.event_outcome.correct
+		pprint(outcome)
+		for _, v in pairs(outcome) do
+			if v.type == "dialog" then
+				self.quest_complete = true
+				self.quest_complete_text = v.dialog
+				msg.post(".", "quest_complete_popup")
+			end
+		end
+	else
+		outcome = QUEST_CONTROLLER.event_outcome.wrong
+		pprint(outcome)
+		for _, v in pairs(outcome) do
+			if v.type == "notify_player" then
+				print(v.notification)
+			end
+		end
+	end
+end
 
 local function on_analog(action_id, node, action)
 	post_to_listener(action_id, action)
@@ -20,23 +49,60 @@ local function set_text(node_name, text)
 	end
 end
 
-local function menu_handler(option)
+local function menu_handler(self, option)
 	if option == nil then
 		timer.delay(0.1, false, function()
 			gui.set_enabled(gui.get_node("player_controls"), true)
-			gui.set_enabled(gui.get_node("popup_menu"), false)
+			gui.set_enabled(gui.get_node("popup_box"), false)
+			self.inventory_open = false
 		end)
 	else
 		timer.delay(0.1, false, function()
 			gui.set_enabled(gui.get_node("player_controls"), false)
-			gui.set_enabled(gui.get_node("popup_menu"), true)
+			gui.set_enabled(gui.get_node("popup_box"), true)
 			gui.set_enabled(gui.get_node("quest_details"), false)
 			gui.set_enabled(gui.get_node("inventory_details"), false)
 			gui.set_enabled(gui.get_node("stats_details"), false)
 			if option == "quest" then
 				gui.set_enabled(gui.get_node("quest_details"), true)
+				
+				local active_qid, active = QUEST_CONTROLLER.getActiveQuest()
+				if active_qid then
+					print("Active:",active_qid, active.quest_name, active.quest_order, active.started, active.completed)
+				end
 			elseif option == "inventory" then
+				self.inventory_open = true
 				gui.set_enabled(gui.get_node("inventory_details"), true)
+				--pprint(QUEST_CONTROLLER.inventory)
+				if next(QUEST_CONTROLLER.inventory) == nil then
+					gui.set_enabled(gui.get_node("no_item_label"), true)
+				else
+					gui.set_enabled(gui.get_node("no_item_label"), false)
+					local x, y, count = 0, 0, 1
+					for i, v in pairs(QUEST_CONTROLLER.inventory) do
+						--local node = gui.new_text_node(vmath.vector3(x, y, 0), i)
+						local node = gui.new_box_node(vmath.vector3(x, y, 0), vmath.vector3(130, 130, 0))
+						
+						gui.set_adjust_mode(node, gui.ADJUST_STRETCH)
+						gui.set_texture(node, "1711913872541")
+						gui.play_flipbook(node, i)
+						gui.set_pivot(node, gui.PIVOT_NW)
+						gui.set_parent(node, gui.get_node("item_area"))
+
+						self.inventory[count] = node
+						self.item_data_by_node[node] = v
+
+						self.node_pos_in_inv[node] = vmath.vector3(x, y, 0)
+
+						count = count + 1
+						x = x + 140
+
+						if x >= 560 then
+							x = 0
+							y = y - 150
+						end
+					end
+				end
 			elseif option == "stats" then
 				gui.set_enabled(gui.get_node("stats_details"), true)
 			end
@@ -49,10 +115,14 @@ local function toggle_music(music)
 
 	if music then
 		print("music is now off")
+		sound.stop("/music#location_music")
+		GAME_CONTROLLER.setMusic(not music)
 		gui.play_flipbook(btn_image, "turn_music_on")
 		set_text("toggle_music_text", "Music On")
 	else
 		print("music is now on")
+		sound.play("/music#location_music")
+		GAME_CONTROLLER.setMusic(not music)
 		gui.play_flipbook(btn_image, "turn_music_off")
 		set_text("toggle_music_text", "Music Off")
 	end
@@ -61,9 +131,22 @@ end
 function init(self)
 	msg.post(".", "acquire_input_focus")
 
+	print(msg.url())
 	self.analog = {}
 	self.buttons = {}
-	self.music = true
+	self.music = GAME_CONTROLLER.music
+	self.inventory = {}
+	self.node_pos_in_inv = {}
+	self.node_in_inv_by_pos = {}
+	self.item_data_by_node = {}
+	self.inventory_open = false
+	self.combined = {}
+	self.can_hand_in_quest = false
+	self.quest_complete = false
+	self.quest_complete_text = ""
+	timer.delay(0.5, false, function()
+		self.active_qid, self.active = QUEST_CONTROLLER.getActiveQuest()
+	end)
 
 	post_to_listener = function(message_id, message)
 		if self.listener then
@@ -71,6 +154,24 @@ function init(self)
 		end
 	end
 
+	timer.delay(0.5, false, function()
+		local fade = gui.get_node("fade")
+		--gui.set_enabled(fade, true)
+		gui.animate(fade, gui.PROP_COLOR, vmath.vector4(1,1,1,0), gui.EASING_INOUTSINE, 0.5, 0, function()
+			gui.set_enabled(fade, false)
+		end)
+	end)
+
+	local music_btn = gui.get_node("toggle_music_btn")
+	gui.set_texture(music_btn, "arqs_ui")
+	if self.music then
+		gui.play_flipbook(music_btn, "turn_music_off")
+		set_text("toggle_music_text", "Music Off")
+	else
+		gui.play_flipbook(music_btn, "turn_music_on")
+		set_text("toggle_music_text", "Music On")
+	end
+	
 	-- register gui buttons
 	timer.delay(0.2, false, function()
 		button.register(gui.get_node("a_btn"), function()
@@ -82,13 +183,13 @@ function init(self)
 		print("b button clicked")
 	end)
 	button.register(gui.get_node("quest_btn"), function()
-		menu_handler("quest")
+		menu_handler(self, "quest")
 	end)
 	button.register(gui.get_node("inventory_btn"), function()
-		menu_handler("inventory")
+		menu_handler(self, "inventory")
 	end)
 	button.register(gui.get_node("stats_btn"), function()
-		menu_handler("stats")
+		menu_handler(self, "stats")
 	end)
 	button.register(gui.get_node("toggle_music_btn"), function()
 		toggle_music(self.music)
@@ -100,7 +201,77 @@ function init(self)
 		end)
 	end)
 	button.register(gui.get_node("close_popup_box"), function()
-		menu_handler()
+		menu_handler(self)
+	end)
+	button.register(gui.get_node("close_popup_notice"), function()
+		gui.set_enabled(gui.get_node("popup_notice"), false)
+		gui.set_enabled(gui.get_node("npc_details"), false)
+	end)
+	button.register(gui.get_node("examine_btn"), function()
+		if next(self.item_data_by_node) == nil then
+			print("No item selected?")
+		else
+			--pprint(self.item_data_by_node[self.select_node])
+			local item = self.item_data_by_node[self.select_node]
+			gui.set_texture(gui.get_node("item_image"), "1711913872541")
+			gui.play_flipbook(gui.get_node("item_image"), item.iid)
+			gui.set_text(gui.get_node("item_name"), "Item: " .. item.name)
+			gui.set_text(gui.get_node("item_description"), item.description)
+			gui.set_enabled(gui.get_node("popup_notice"), true)
+			gui.set_enabled(gui.get_node("item_details"), true)
+			gui.set_enabled(gui.get_node("tooltip"), false)
+		end
+	end)
+	button.register(gui.get_node("use_give_btn"), function()
+		if next(self.item_data_by_node) == nil then
+			print("No item selected?")
+		else
+			local item = self.item_data_by_node[self.select_node]
+			-- this bit is just so the input to the function is the same format as when submitting combined items
+			local submit_item = {}
+			submit_item[1] = item
+			
+			QUEST_CONTROLLER.checkQuestCompletion(self.active_qid, self.active.quest_data, submit_item, self.can_hand_in_quest)
+			--pprint(submit_item)
+		end
+	end)
+	button.register(gui.get_node("use_combined_btn"), function()
+		if next(self.combined) == nil then
+			print("Theres no combined item to use")
+		else
+			--print("Used combined items:")
+			local combined_items = {}
+			for i=1, #self.combined do
+				--pprint(QUEST_CONTROLLER.inventory[self.combined[i]])
+				table.insert(combined_items, QUEST_CONTROLLER.inventory[self.combined[i]])
+			end
+
+			local status = QUEST_CONTROLLER.checkQuestCompletion(self.active_qid, self.active.quest_data, combined_items, self.can_hand_in_quest)
+
+			if status then
+				timer.delay(0.1, false, function()
+					-- there is an issue with this bit here
+					-- gui.set_text(gui.get_node("npc_name"), QUEST_CONTROLLER.quest_success_name)
+					-- gui.set_text(gui.get_node("npc_dialog"), QUEST_CONTROLLER.quest_success_dialog)
+
+					-- here as placeholder
+					gui.set_text(gui.get_node("npc_name"), "Rose")
+					gui.set_text(gui.get_node("npc_dialog"), "Quest completed!")
+					gui.set_enabled(gui.get_node("popup_notice"), true)
+					gui.set_enabled(gui.get_node("npc_details"), true)
+					
+					gui.set_enabled(gui.get_node("popup_box"), false)
+					gui.set_enabled(gui.get_node("player_controls"), true)
+					self.inventory_open = false
+					self.quest_complete = true
+				end)
+			end
+		end
+	end)
+
+	timer.delay(0.2, false, function()
+		set_text("location_name", AREA_CONTROLLER.currentLocationName)
+		set_text("room_floor", AREA_CONTROLLER.currentRoomName .. ", Floor " .. AREA_CONTROLLER.currentLevel)
 	end)
 end
 
@@ -118,11 +289,140 @@ function on_message(self, message_id, message, sender)
 		assert(message.radius, "You must provide a radius for the analog control")
 		onscreen.register_analog(gui.get_node(message.id), { radius = message.radius }, on_analog)
 	end
+
+	if message_id == hash("can_hand_in_quest") then
+		self.can_hand_in_quest = true
+	end
+
+	if message_id == hash("cannot_hand_in_quest") then
+		self.can_hand_in_quest = false
+	end
+
+	if message_id == hash("npc_interact_popup") then
+		-- print("Quest start popup here")
+		local name = QUEST_CONTROLLER.npcDialog.name
+		local dialog = QUEST_CONTROLLER.npcDialog.dialog
+		
+		gui.set_text(gui.get_node("npc_name"), name)
+		gui.set_text(gui.get_node("npc_dialog"), dialog)
+		gui.set_enabled(gui.get_node("popup_notice"), true)
+		gui.set_enabled(gui.get_node("npc_details"), true)
+	end
+
+	if message_id == hash("item_interact_popup") then
+		--print("msg received")
+		-- print("Quest start popup here")
+		local iid = QUEST_CONTROLLER.itemDialog.iid
+		local name = QUEST_CONTROLLER.itemDialog.name
+		local dialog = QUEST_CONTROLLER.itemDialog.dialog
+
+		gui.set_texture(gui.get_node("item_image"), "1711913872541")
+		gui.play_flipbook(gui.get_node("item_image"), iid)
+		gui.set_text(gui.get_node("item_name"), "You picked up: " .. name)
+		gui.set_text(gui.get_node("item_description"), dialog)
+		gui.set_enabled(gui.get_node("popup_notice"), true)
+		gui.set_enabled(gui.get_node("item_details"), true)
+	end
 end
 
+function update(self, dt)
+	
+end
+
+local selected_iid = ""
+
 function on_input(self, action_id, action)
+	
 	-- onscreen gui
 	onscreen.on_input(action_id, action)
 	
 	button.on_input(action_id, action)
+
+	if self.drag_node then
+		local mouse_position = vmath.vector3(action.x, action.y, 0)
+		gui.set_pivot(self.drag_node, gui.PIVOT_CENTER)
+		gui.set_parent(self.drag_node, gui.get_node("origin"))
+		gui.set_position(self.drag_node, mouse_position)
+	end
+
+	if action_id == hash("touch") and self.quest_complete then
+		if action.pressed then
+			if gui.pick_node(gui.get_node("close_popup_notice"), action.x, action.y) then
+				timer.delay(0.1, false, function()
+					msg.post("loader:/game_loader#loader", "return_to_map_from_location")
+				end)
+			end
+		end
+	end	
+
+	if action_id == hash("touch") and next(self.inventory) ~= nil and self.inventory_open then
+		if action.pressed and next(self.inventory) ~= nil and self.inventory_open then
+			
+			for i = 1, #self.inventory do
+				local item = self.inventory[i]
+				
+				if gui.pick_node(item, action.x, action.y) then
+					self.select_node = self.inventory[i]
+					selected_iid = self.item_data_by_node[self.select_node].iid
+					--self.node_pos_in_inv = gui.get_position(self.select_node)
+					gui.set_enabled(gui.get_node("examine_btn"), true)
+					gui.set_enabled(gui.get_node("use_give_btn"), true)
+					self.timer = timer.delay(0.1, false, function()
+						self.drag_node = self.inventory[i]
+						self.drag_node_orignal_positon = gui.get_position(self.drag_node)
+					end)
+					break
+				end
+			end
+		elseif action.released then
+			if self.timer then
+				timer.cancel(self.timer)
+			end
+			if self.drag_node then
+				--local pos = gui.get_position(self.drag_node)
+				local pos = vmath.vector3(action.x, action.y, 0)
+				local box_name = "combine_box_"
+				local in_combined_box = false
+
+				for i=1,8 do
+					local combine_box = gui.get_node(box_name .. i)
+					local combine_box_pos = gui.get_position(combine_box)
+					if gui.pick_node(combine_box, pos.x, pos.y) then
+						gui.set_parent(self.drag_node, gui.get_node("combine_bar"))
+						gui.set_position(self.drag_node, combine_box_pos)
+						in_combined_box = true
+						local is_in_combined = false
+						for _, value in pairs(self.combined) do
+							if value == selected_iid then
+								is_in_combined = true
+								break
+							end
+						end
+
+						if not is_in_combined then
+							table.insert(self.combined, selected_iid)
+						end
+					end
+				end
+
+				if in_combined_box == false then
+					for i = 1, #self.combined do
+						if self.combined[i] == selected_iid then
+							table.remove(self.combined, i)
+						end
+					end
+					
+				-- reset back to its original position in inventory
+					gui.set_parent(self.drag_node, gui.get_node("item_area"))
+					gui.set_position(self.drag_node, self.node_pos_in_inv[self.drag_node])
+					gui.set_pivot(self.drag_node, gui.PIVOT_NW)
+				end
+
+			end
+			
+			self.drag_node = nil
+
+			--pprint(self.combined)
+		end
+	end
 end

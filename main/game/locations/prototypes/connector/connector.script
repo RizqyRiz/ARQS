@@ -29,8 +29,9 @@ function on_message(self, message_id, message, sender)
 				AREA_CONTROLLER.setCurrentRoom(adjacent_area)
 
 				--set_new_player_loc(connector_details.x, connector_details.y, connector_details.direction)
-				
+
 				msg.post("loader:/game_loader#loader", "reload_location_from_connector")
+
 			else
 				print("Connector ID not found in the URL")
 			end

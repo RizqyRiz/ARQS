@@ -1,18 +1,41 @@
 local GAME_CONTROLLER = require("main.module.game_controller")
 local PLAYER_CONTROLLER = require("main.module.player_controller")
+local QUEST_CONTROLLER = require("main.module.quest_controller")
+
+local function fetchInitiateDialog(quest_table)
+	for _, event in pairs(quest_table.events) do
+		if event.type == "initiate" then
+			for _, subEvent in pairs(event.events) do
+				if subEvent.type == "dialog" then
+					return subEvent.dialog
+				end
+			end
+		end
+	end
+	return nil
+end
 
 function init(self)
-	self.quest_initiator = false
+	self.id = go.get_id()
+	self.initiator = false
 	self.can_interact = false
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("trigger_response") then
 		if message.enter then
+			if QUEST_CONTROLLER.questCompleteTarget and QUEST_CONTROLLER.npcGoList[self.id] == QUEST_CONTROLLER.questCompleteTarget then
+				msg.post("location:/interface#interface", "can_hand_in_quest")
+			end
+
 			msg.post("#interaction", "play_animation", {id = hash("talk")})
 			msg.post(PLAYER_CONTROLLER.goid, "can_interact_with_npc") 
 			self.can_interact = true
 		else
+			if QUEST_CONTROLLER.questCompleteTarget and QUEST_CONTROLLER.npcGoList[self.id] == QUEST_CONTROLLER.questCompleteTarget then
+				msg.post("location:/interface#interface", "cannot_hand_in_quest")
+			end
+			
 			-- take action for exit
 			msg.post("#interaction", "play_animation", {id = hash("empty")})
 			msg.post(PLAYER_CONTROLLER.goid, "cannot_interact_with_npc")
@@ -21,6 +44,50 @@ function on_message(self, message_id, message, sender)
 	end
 
 	if message_id == hash("interact_with_player") then
-		print("Interaction notice from npc script!")
+		--print("Interaction notice from npc script!")
+		--print("My NPCID is:", QUEST_CONTROLLER.npcGoList[self.id])
+		
+		-- check if theres an active quest
+		local active_qid, active = QUEST_CONTROLLER.getActiveQuest()
+		if active_qid and not active.completed then
+			--print("I already gave you a quest!")
+			local npcqid = QUEST_CONTROLLER.npcGoList[self.id] .. active_qid
+			local npc_data = QUEST_CONTROLLER.npcList[npcqid]
+			--pprint(npc_data)
+			QUEST_CONTROLLER.setNPCDialog(npc_data.name, npc_data.background)
+
+			timer.delay(0.1, false, function()
+				msg.post("location:/interface#interface", "npc_interact_popup")
+			end)
+		else
+			-- check if theres an available quest
+			local available_qid, available = QUEST_CONTROLLER.getAvailableQuest()
+			if available_qid then
+				-- start quest
+				QUEST_CONTROLLER.startQuest(available_qid, true)
+				--print("Now active:",available_qid, available.quest_name, available.quest_order, true, available.completed)
+				--pprint(available.quest_data.tasks[1].events)
+				local events = available.quest_data.tasks[1].events
+				local quest_start_dialog = ""
+				for i, v in pairs(events) do
+					if v.type == "initiate" then
+						quest_start_dialog = v.events[1].dialog
+					end
+				end
+				--print("hello_world")
+				--local dialog = fetchInitiateDialog(available.quest_data)
+				local npcqid = QUEST_CONTROLLER.npcGoList[self.id] .. available_qid
+				local npc_data = QUEST_CONTROLLER.npcList[npcqid]
+
+				QUEST_CONTROLLER.setNPCDialog(npc_data.name, quest_start_dialog)
+
+				timer.delay(0.1, false, function()
+					msg.post("location:/interface#interface", "npc_interact_popup")
+				end)
+			else
+				-- this is impossible!
+				print("I'm not even supposed to be here.")
+			end
+		end
 	end
 end

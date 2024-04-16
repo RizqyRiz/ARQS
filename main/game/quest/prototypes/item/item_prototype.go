@@ -16,7 +16,7 @@ components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"Item-Paper Item\"\n"
+  data: "default_animation: \"Item-Beaker Item\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "blend_mode: BLEND_MODE_ALPHA\n"
   "textures {\n"
